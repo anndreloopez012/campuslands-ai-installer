@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  calidad:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar herramientas
+        run: sudo apt-get update && sudo apt-get install -y shellcheck bats
+      - name: ShellCheck
+        run: shellcheck -x -S warning install.sh lib/*.sh modulos/*.sh scripts/*.sh tests/*.sh
+      - name: Pruebas de lógica
+        run: bats tests/instalador.bats
+
+  ubuntu-limpio:
+    # Instalación real en x86: en una Mac, Rosetta no ejecuta bien el tar de Ubuntu 26.04.
+    if: github.event_name != 'pull_request'
+    needs: calidad
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu: ['24.04', '26.04']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar, verificar, repetir, abrir apps y desinstalar
+        run: tests/ubuntu-limpio.sh ${{ matrix.ubuntu }} amd64
