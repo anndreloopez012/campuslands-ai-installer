@@ -1,0 +1,11 @@
+# Ubuntu con escritorio mínimo y un usuario normal: lo más cercano a un equipo recién instalado.
+ARG UBUNTU=24.04
+FROM ubuntu:${UBUNTU}
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends gnome-shell sudo wget dbus dbus-x11 dconf-gsettings-backend gsettings-desktop-schemas xdg-user-dirs \
+     xvfb xdotool imagemagick \
+  && useradd -m -s /bin/bash camper \
+  && echo 'camper ALL=(ALL) NOPASSWD:ALL' >/etc/sudoers.d/camper
+USER camper
+WORKDIR /home/camper
